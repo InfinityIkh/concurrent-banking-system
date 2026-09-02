@@ -38,9 +38,9 @@ class UserController extends Controller
         //
         $this->authorize('update', request()->user());
         $credentials = $request->validated();
-        $res = $this->userServices->updateUser($user ,$credentials);
+        $resutat = $this->userServices->updateUser($user ,$credentials);
         return response()->json(
-            $res
+            $resutat['body'],$resutat['status']
         );
     }
 
@@ -48,18 +48,19 @@ class UserController extends Controller
     {
         //
         $this->authorize('view', request()->user());
-        $res = $this->userServices->showUser($user);
+        $resutat = $this->userServices->showUser($user);
         return response()->json(
-            $res
+            $resutat['body'],$resutat['status']
         );
     }
+
     public function destroy(User $user): JsonResponse
     {
         //
         $this->authorize('delete', request()->user());
-        $res = $this->userServices->deleteUser($user);
+        $resutat = $this->userServices->deleteUser($user);
         return response()->json(
-            $res,204
+            $resutat['body'],$resutat['status']
         );
     }
 }
