@@ -24,14 +24,14 @@ class UserRequest extends FormRequest
     {
         return [
             'firstname' => [
-                'required',
+                $this->is('*/login') ? '' : 'required',
                 'string',
                 'max:255'
             ],
             'lastname' => [
-                'required',
+                $this->is('*/login') ? '' : 'required',
                 'string',
-                'max:255'
+                'max:255',
             ],
             'email' => [
                 $this->isMethod('POST') ? 'required' : 'nullable',
@@ -45,7 +45,7 @@ class UserRequest extends FormRequest
                 $this->isMethod('POST') ? 'required' : 'nullable',
                 'string',
                 'min:8',
-                'confirmed'
+                $this->is('*/register') ? 'confirmed' : ''
             ],
         ];
     }
