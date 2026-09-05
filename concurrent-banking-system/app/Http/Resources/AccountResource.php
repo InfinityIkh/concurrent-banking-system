@@ -20,8 +20,8 @@ class AccountResource extends JsonResource
             'status' => $this->status,
             'created_at' => $this->created_at,
             'balance'=> $this->balance,
-            'currency' => $this->currency,
-            'user' => $this->user
+            'currency' => new CurrencyResource($this->whenLoaded('currency')),
+            'user' => new UserResources($this->whenLoaded('user')),
         ];
     }
 }
