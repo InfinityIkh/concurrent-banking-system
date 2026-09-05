@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AccountStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -11,8 +12,13 @@ class Account extends Model
     use softDeletes;
     protected $fillable = [
         'user_id',
+        'status',
         'currency_id',
         'account_number'
+    ];
+
+    protected $casts = [
+        'status' => AccountStatus::class,
     ];
 
     protected static function booted(): void
