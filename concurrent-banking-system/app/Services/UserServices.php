@@ -71,7 +71,7 @@ class UserServices
             'status' => 200,
             'body' => [
                 "message" => "User retrieved successfully",
-                "user' => new UserResources($user),"
+                "user" => new UserResources($user)
             ]
         ];
     }
