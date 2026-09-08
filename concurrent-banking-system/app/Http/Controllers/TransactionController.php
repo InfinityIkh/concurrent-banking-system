@@ -47,6 +47,17 @@ class TransactionController extends Controller
         );
     }
 
+    public function createWithdrawOperation(TransactionRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $account = $user->account;
+        $credentials = $request->validated();
+        $response = $this->transactionServices->createWithdrawTransaction($credentials, $account);
+        return response()->json(
+            $response['body'],$response['status']
+        );
+    }
+
     public function show(Transaction $transaction): JsonResponse
     {
         //
