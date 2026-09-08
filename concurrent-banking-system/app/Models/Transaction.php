@@ -6,6 +6,7 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
@@ -44,12 +45,24 @@ class Transaction extends Model
         return $reference;
     }
 
+    public function accounts(): BelongsToMany
+    {
+        return $this->belongsToMany(Account::class ,'transaction_accounts' ,'transaction_id', 'account_id',)
+                    ->withPivot(
+                        [
+                            'role',
+                            'balance_before',
+                            'balance_after'
+                        ]);
+    }
+
     public function account(): BelongsTo
     {
-        return $this->belongsTo(Account::class , 'account_id');
+        return $this->belongsTo(Account::class ,'account_id');
     }
     public function destinationAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class ,'destination_account_id');
     }
+
 }
