@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\AccountStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Account extends Model
@@ -38,18 +40,26 @@ class Account extends Model
         return $number;
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function transactions(): BelongsToMany
     {
-        return $this->hasMany(Transaction::class, 'account_id');
+        return $this->BelongsToMany(Transaction::class, 'account_transactions' , 'account_id', 'transaction_id')
+                    ->withPivot(
+                        [
+                            'role',
+                            'balance_before',
+                            'balance_after'
+                        ]
+                    );
     }
 
-    public function currency(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function currency(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Currency::class);
+        return $this->belongsTo(Currency::class);
     }
+
 }
