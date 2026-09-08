@@ -24,6 +24,17 @@ class TransactionController extends Controller
         );
     }
 
+    public function createDepositOperation(TransactionRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $account = $user->account;
+        $credentials = $request->validated();
+        $response = $this->transactionServices->createDepositTransaction($credentials, $account);
+        return response()->json(
+            $response['body'],$response['status']
+        );
+    }
+
     public function createTransferOperation(TransactionRequest $request ,Account $toAccount): JsonResponse
     {
         //
