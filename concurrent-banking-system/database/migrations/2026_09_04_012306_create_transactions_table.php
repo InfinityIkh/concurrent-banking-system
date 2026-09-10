@@ -17,12 +17,11 @@ return new class extends Migration
             $table->foreignId('destination_account_id')->nullable()->constrained('accounts')->cascadeOnDelete();
             $table->decimal('amount', 15, 2);
             $table->string('reference')->unique();
-            $table->enum('type', ['deposit', 'withdrawal', 'transfer']);
+            $table->enum('type', ['deposit', 'withdrawal', 'transfer' ,'refund']);
             $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
             $table->timestamps();
             $table->softDeletes();
         });
-
     }
 
     /**
