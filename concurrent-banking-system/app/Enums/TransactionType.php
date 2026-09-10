@@ -6,7 +6,7 @@ enum TransactionType: string
 {
     //
     case DEPOSIT = 'deposit';
-    case WITHDRAW = 'withdraw';
+    case WITHDRAW = 'withdrawal';
     case TRANSFER = 'transfer';
     case REFUND = 'refund';
 }
