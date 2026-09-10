@@ -18,8 +18,6 @@ class Transaction extends Model
         'account_id',
         'destination_account_id',
         'amount',
-        'balance_before',
-        'balance_after',
         'reference',
         'status',
         'type'
@@ -40,7 +38,7 @@ class Transaction extends Model
     private static function generateReferenceNumber(): string
     {
         do{
-            $reference = 'REF-'.\Illuminate\Support\now()->toFormattedDateString().'-'.rand(1000,9999).'-'.rand(1000,9999);
+            $reference = 'REF-'.\Illuminate\Support\now()->format('Y-dm').'-'.rand(1000,9999).'-'.rand(1000,9999);
         }while(self::where('reference', $reference)->exists());
         return $reference;
     }
