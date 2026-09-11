@@ -8,8 +8,10 @@ use App\Enums\TransactionType;
 use App\Exceptions\InsufficientBalanceException;
 use App\Exceptions\InvalidTransactionAmountException;
 use App\Http\Resources\TransactionResource;
+use App\Jobs\GeneratePdfJob;
 use App\Models\Account;
 use App\Models\Transaction;
+use App\Models\TransactionAccount;
 use Illuminate\Support\Facades\DB;
 
 class TransactionServices
@@ -32,6 +34,81 @@ class TransactionServices
                 ]
             ]
         ];
+    }
+
+
+    public function createRefundTransaction(Transaction $transaction)
+    {
+        //
+        if (!$transaction->destinationAccount()->exists()) {
+            return [
+                'status' => 422,
+                'body' => [
+                    'message' => 'You can\'t refund a deposit or withdrawal transaction',
+                ],
+            ];
+        }
+
+        if ($transaction->type === TransactionType::REFUND) {
+            return [
+                'status' => 422,
+                'body' => [
+                    'message' => 'This transaction has already been refunded',
+                ],
+            ];
+        }
+
+        return DB::transaction(function () use ($transaction) {
+            $accountsIds = [$transaction->account_id, $transaction->destination_account_id];
+            sort($accountsIds); // consistent lock order avoids deadlocks - kept as-is, good practice
+
+            $accounts = Account::whereIn('id', $accountsIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            $lockedSenderAccount = $accounts[$transaction->account_id];
+            $lockedReceiverAccount = $accounts[$transaction->destination_account_id];
+
+            $senderTransactionAccount = TransactionAccount::where('transaction_id', $transaction->id)
+                ->where('role', TransactionAccountRole::SENDER)
+                ->first(['balance_before', 'balance_after']);
+
+            if (!$senderTransactionAccount) {
+                abort(422, 'Sender transaction account record not found.');
+            }
+
+            $amount = $senderTransactionAccount->balance_before - $senderTransactionAccount->balance_after;
+
+            if ($amount <= 0) {
+                abort(422, 'Unable to determine a valid refund amount.');
+            }
+
+            if ($lockedReceiverAccount->balance < $amount) {
+                return [
+                    'status' => 422,
+                    'body' => [
+                        'message' => 'Receiver balance is insufficient to reverse this transaction.',
+                    ],
+                ];
+            }
+
+            $lockedSenderAccount->increment('balance', $amount);
+            $lockedReceiverAccount->decrement('balance', $amount);
+
+            $transaction->update([
+                'type' => TransactionType::REFUND,
+            ]);
+            GeneratePdfJob::dispatch($transaction)->afterCommit();
+
+            return [
+                'status' => 200,
+                'body' => [
+                    'message' => 'Transaction refunded',
+                    'transaction' => new TransactionResource($transaction),
+                ],
+            ];
+        });
     }
 
     public function createTransferTransaction(array $credentials ,Account $fromAccount ,Account $toAccount): array
@@ -81,6 +158,7 @@ class TransactionServices
             $transaction->update([
                 'status' => TransactionStatus::COMPLETED
             ]);
+            GeneratePdfJob::dispatch($transaction)->afterCommit();
             return [
                 'status' => 201,
                 'body' => [
@@ -129,6 +207,7 @@ class TransactionServices
             $transaction->update([
                 'status' => TransactionStatus::COMPLETED
             ]);
+            GeneratePdfJob::dispatch($transaction)->afterCommit();
 
             return [
                 'status' => 201,
@@ -178,6 +257,7 @@ class TransactionServices
             $transaction->update([
                 'status' => TransactionStatus::COMPLETED
             ]);
+            GeneratePdfJob::dispatch($transaction)->afterCommit();
 
             return [
                 'status' => 201,
