@@ -24,6 +24,16 @@ class TransactionController extends Controller
         );
     }
 
+    public function createRefundOperation(Transaction $transaction): JsonResponse
+    {
+        //
+        $this->authorize('refund', $transaction);
+        $response = $this->transactionServices->createRefundTransaction($transaction);
+        return response()->json(
+            $response['body'],$response['status']
+        );
+    }
+
     public function createDepositOperation(TransactionRequest $request): JsonResponse
     {
         $user = $request->user();
